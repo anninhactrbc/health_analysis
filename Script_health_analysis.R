@@ -5,16 +5,17 @@ medical_doctors <- read_csv("medical_doctors_per_1000_people.csv")
 life_expectancy <- read_csv("life_expectancy_years.csv")
 
 library(tidyverse)
-cm <- child_mortality[,c(1,208:212)]
-cm <- cm %>% filter(stringr::str_detect(country, 'Brazil|Argentina|Bolivia|Colombia|Peru|Uruguay|Paraguay|Venezuela|Suriname'))
-hs <- health_spending[,c(1, 13:17)]
-hs <- hs %>% filter(stringr::str_detect(country, 'Brazil|Argentina|Bolivia|Colombia|Peru|Uruguay|Paraguay|Venezuela|Suriname'))
-md <- medical_doctors[,c(1,48:52)]
-md <- md %>% filter(stringr::str_detect(country, 'Brazil|Argentina|Bolivia|Colombia|Peru|Uruguay|Paraguay|Venezuela|Suriname'))
-vr <- vacc_rate[,c(1,28:32)]
-vr <- vr %>% filter(stringr::str_detect(country, 'Brazil|Argentina|Bolivia|Colombia|Peru|Uruguay|Paraguay|Venezuela|Suriname'))
-le <- life_expectancy[,c(1,208:212)]
-le <- le %>% filter(stringr::str_detect(country, 'Brazil|Argentina|Bolivia|Colombia|Peru|Uruguay|Paraguay|Venezuela|Suriname'))
+cm <- child_mortality[,c(1,162:212)]
+cm <- cm %>% filter(stringr::str_detect(country, 'Brazil|Argentina|Bolivia|Colombia|Peru|Uruguay|Paraguay|Venezuela|Suriname|Ecuador|Guyana'))
+hs <- health_spending[,c(1, 7:17)]
+hs <- hs %>% filter(stringr::str_detect(country, 'Brazil|Argentina|Bolivia|Colombia|Peru|Uruguay|Paraguay|Venezuela|Suriname|Ecuador|Guyana'))
+md <- medical_doctors[,c(1,2:52)]
+md <- md %>% filter(stringr::str_detect(country, 'Brazil|Argentina|Bolivia|Colombia|Peru|Uruguay|Paraguay|Venezuela|Suriname|Ecuador|Guyana'))
+vr <- vacc_rate[,c(1,2:32)]
+vr <- vr %>% filter(stringr::str_detect(country, 'Brazil|Argentina|Bolivia|Colombia|Peru|Uruguay|Paraguay|Venezuela|Suriname|Ecuador|Guyana'))
+lf <- life_expectancy[,c(1, 162:212)]
+lf <- lf %>% filter(stringr::str_detect(country, 'Brazil|Argentina|Bolivia|Colombia|Peru|Uruguay|Paraguay|Venezuela|Suriname|Ecuador|Guyana'))
+
 
 dados_2005 <- data.frame(select(cm, "country", "2005"), select(hs, "2005"), select(md, "2005"), select(vr, "2005"), select(le, "2005"))
 names(dados_2005) <- c("country", "c_mortality", "h_spending", "m_doctors", "v_rate", "l_expectancy")
