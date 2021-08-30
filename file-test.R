@@ -53,9 +53,10 @@ tcm <- setDT(tcm, keep.rownames = TRUE)
 tcm <- dplyr::rename(tcm, year = rn)
 grafico_tcm <- melt(tcm,id.vars=c("year"))
 grafico_tcm <- dplyr::rename(grafico_tcm, country = variable)
-ggplot(grafico_tcm, aes(x=year, y =value)) + facet_wrap(~country, scale = "free_x", ncol = 3) + geom_point() +
+ggplot(grafico_tcm, aes(x=year, y =value, fill = country)) + facet_wrap(~country, scale = "free_x", ncol = 3) + geom_bar(stat="identity") +
     ylab("Child mortality: 0-5 years old dying per 1000 born") + xlab("Year") + 
-    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size = 7))
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size = 7)) +
+    guides(fill = "none", color = "none", linetype = "none", shape = "none")
 
 tvr <- vr[,-1]
 tvr <- t(tvr)
