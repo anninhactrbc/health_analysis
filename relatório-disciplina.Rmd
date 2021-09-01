@@ -1,0 +1,224 @@
+---
+title: "Relatório Disciplina de R - Análises de Dados relacionados à Saúde"
+author: "Ana Carolina, Ana Cecília, Karol, Laila, Nathan e Thaís"
+date: "01/09/2021"
+output: 
+    html_document:
+        highlight: textmate
+        theme: flatly
+        number_sections: yes
+        toc: yes
+        toc_float: 
+            collapsed: yes
+            smooth_scroll: no
+---
+
+
+# Contextualização
+  
+DESCREVER O BANCO DE DADOS  
+
+  
+# Metodologia
+
+## Carregando as bibliotecas utilizadas
+```{r pacotes, warning = FALSE, message = FALSE}
+library(readr)
+library(tidyverse)
+library(lemon)
+library(cowplot)
+library(rmarkdown)
+```
+  
+  
+## Carregando os bancos de dados
+```{r carregamento do banco de dados, warning = FALSE, message = FALSE}
+child_mortality <- read_csv("child_mortality_0_5_year_olds_dying_per_1000_born.csv")
+health_spending <- read_csv("total_health_spending_percent_of_gdp.csv")
+vacc_rate <- read_csv("vacc_rate.csv")
+medical_doctors <- read_csv("medical_doctors_per_1000_people.csv")
+life_expectancy <- read_csv("life_expectancy_years.csv")
+```  
+  
+  
+## Colocando o nome da primeira coluna como 'Country'
+````{r modificação da primeira coluna dos arquivos}
+colnames(child_mortality)[1] <- "Country"
+colnames(health_spending)[1] <- "Country"
+colnames(vacc_rate)[1] <- "Country"
+colnames(medical_doctors)[1] <- "Country"
+colnames(life_expectancy)[1] <- "Country"
+```
+  
+  
+## Filtrando o banco de dados por países da América Latina e por ano
+```{r filtrando o banco de dados}
+cm <- child_mortality[,c("Country", '1959':'2009')]
+cm <- cm %>% filter(stringr::str_detect(Country, 'Brazil|Argentina|Bolivia|Colombia|Peru|Uruguay|Paraguay|Venezuela|Suriname|Ecuador|Guyana'))
+hs <- health_spending[,c("Country", '1999':'2009')]
+hs <- hs %>% filter(stringr::str_detect(Country, 'Brazil|Argentina|Bolivia|Colombia|Peru|Uruguay|Paraguay|Venezuela|Suriname|Ecuador|Guyana'))
+md <- medical_doctors[,c("Country",'1959':'2009')]
+md <- md %>% filter(stringr::str_detect(Country, 'Brazil|Argentina|Bolivia|Colombia|Peru|Uruguay|Paraguay|Venezuela|Suriname|Ecuador|Guyana'))
+vr <- vacc_rate[,c("Country",'1979':'2009')]
+vr <- vr %>% filter(stringr::str_detect(Country, 'Brazil|Argentina|Bolivia|Colombia|Peru|Uruguay|Paraguay|Venezuela|Suriname|Ecuador|Guyana'))
+lf <- life_expectancy[,c("Country", '1959':'2009')]
+lf <- lf %>% filter(stringr::str_detect(Country, 'Brazil|Argentina|Bolivia|Colombia|Peru|Uruguay|Paraguay|Venezuela|Suriname|Ecuador|Guyana'))
+```
+  
+  
+## Juntando os bancos de dados em um só arquivo
+```{r juntando os bancos de dados}
+db_joined <- lapply(1:5, function(x){vetores <- list(cm, hs, lf, md, vr); 
+xtype <- c("cm", "hs", "lf", "md", "vr"); 
+vetores[[x]] %>% mutate(type = xtype[x])}) %>% 
+    bind_rows() %>%  select(Country, type, everything()) %>%  
+    pivot_longer(cols = -c("Country", "type"), names_to = "ano", values_to = "valores")
+```
+  
+  
+## Visualização do banco de dados formatado
+```{r}
+paged_table(db_joined)
+```
+  
+  
+## Geração dos gráficos por país
+### Child Mortality
+```{r geração dos gráficos 1}
+cm_plot <-
+    db_joined %>% filter(type == "cm") %>% 
+    ggplot(aes(x=as.integer(ano), y= valores, col= Country), data = .) + 
+    geom_smooth() +
+    labs(title = "Child Mortality", 
+         x = "", 
+         y = "Death per 1,000 live births",
+         subtitle = "Death of children under five years of age per 1,000 live births") +
+    theme(plot.title = element_text(vjust = 0.5, hjust = 0.5, face = "bold", size = 15),
+          axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0)),
+          axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)),
+          axis.text.x = element_text(angle = 90, vjust = 0.5),
+          legend.title.align = 0.5,
+          plot.subtitle = element_text(hjust=0.5, size = 9))
+
+
+```
+  
+### Health spending
+```{r geração dos gráficos 2}
+hs_plot <-
+    db_joined %>% filter(type == "hs") %>% 
+    ggplot(aes(x=as.integer(ano), y= valores, col= Country), data = .) + 
+    geom_smooth() +
+    labs(title = "Total Health Spending",
+         x = "",
+         y = "(% of GDP)",
+         subtitle = "Sum of public and privite health expenditure as a percentage of GDP",
+         caption = "GDP: Gross domestic product") +
+    theme(plot.title = element_text(vjust = 0.5, hjust = 0.5, face = "bold", size = 15),
+          axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0)),
+          axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)),
+          axis.text.x = element_text(angle = 90, vjust = 0.5),
+          legend.title.align = 0.5,
+          plot.subtitle = element_text(hjust=0.5, size = 9))
+```
+  
+### Life expectancy
+```{r geração dos gráficos 3}
+lf_plot <-
+    db_joined %>% filter(type == "lf") %>% 
+    ggplot(aes(x=as.integer(ano), y= valores, col= Country), data = .) + 
+    geom_smooth() +
+    labs(title = "Life Expectancy",
+         x = "",
+         y = "Years",
+         subtitle = "Years that a newborn child would live if current mortality patterns were to stay the same") +
+    theme(plot.title = element_text(vjust = 0.5, hjust = 0.5, face = "bold", size = 15),
+          axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0)),
+          axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)),
+          axis.text.x = element_text(angle = 90, vjust = 0.5),
+          legend.title.align = 0.5,
+          plot.subtitle = element_text(hjust=0.5, size = 9))
+```
+  
+### Medical doctors
+```{r geração dos gráficos 4}
+md_plot <-
+    db_joined %>% filter(type == "md") %>% 
+    ggplot(aes(x=as.integer(ano), y= valores, col= Country), data = .) + 
+    geom_smooth() +
+    labs(title = "Medical Doctors",
+         x = "",
+         y = "Medical doctors per 1000 people",
+         subtitle = "Physicians included generalist and specialist medical doctors practitioners") +
+    theme(plot.title = element_text(vjust = 0.5, hjust = 0.5, face = "bold", size = 15),
+          axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0)),
+          axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)),
+          axis.text.x = element_text(angle = 90, vjust = 0.5),
+          legend.title.align = 0.5,
+          plot.subtitle = element_text(hjust=0.5, size = 9))
+```
+  
+### Vaccination rate
+```{r geração dos gráficos 5}
+vr_plot <-
+    db_joined %>% filter(type == "vr") %>% 
+    ggplot(aes(x=as.integer(ano), y= valores, col= Country), data = .) + 
+    geom_smooth() +
+    labs(title = "Vaccination Rate",
+         x = "",
+         y = "% of vaccinated children",
+         subtitle = "Share of one-years-olds who are vaccinated against at least one disease") +
+    theme(plot.title = element_text(vjust = 0.5, hjust = 0.5, face = "bold", size = 15),
+          axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0)),
+          axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)),
+          axis.text.x = element_text(angle = 90, vjust = 0.5),
+          legend.title.align = 0.5,
+          plot.subtitle = element_text(hjust=0.5, size = 9))
+```
+  
+  
+## Extraindo a legenda de um dos gráficos para usar posteriormente
+```{r extraindo legenda, warning = FALSE, message = FALSE}
+legend <- g_legend(cm_plot + theme(legend.position='left'))
+```  
+  
+  
+## Gerando o gráfico
+```{r grafico, eval = FALSE, warning = FALSE, message = FALSE}
+plot_grid(cm_plot + 
+                  theme(legend.position='hidden'), 
+              lf_plot + 
+                  theme(legend.position='hidden'),
+              md_plot + 
+                  theme(legend.position='hidden'), 
+              hs_plot + 
+                  theme(legend.position='hidden'), 
+              vr_plot + 
+                  theme(legend.position='hidden'),
+              labels = c("a", "b", "c", "d", "e"),
+              label_fontface = "italic",
+              ncol =2,
+              legend)
+```  
+  
+  
+# Resultados
+DESCREVER OS RESULTADOS OBTIDOS
+  
+  
+```{r grafico imagem, echo = FALSE, warning = FALSE, message = FALSE}
+plot_grid(cm_plot + 
+                  theme(legend.position='hidden'), 
+              lf_plot + 
+                  theme(legend.position='hidden'),
+              md_plot + 
+                  theme(legend.position='hidden'), 
+              hs_plot + 
+                  theme(legend.position='hidden'), 
+              vr_plot + 
+                  theme(legend.position='hidden'),
+              labels = c("a", "b", "c", "d", "e"),
+              label_fontface = "italic",
+              ncol =2,
+              legend)
+```  
