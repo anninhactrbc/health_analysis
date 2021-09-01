@@ -21,6 +21,14 @@ vr <- vr %>% filter(stringr::str_detect(country, 'Brazil|Argentina|Bolivia|Colom
 lf <- life_expectancy[,c("country", '1959':'2009')]
 lf <- lf %>% filter(stringr::str_detect(country, 'Brazil|Argentina|Bolivia|Colombia|Peru|Uruguay|Paraguay|Venezuela|Suriname|Ecuador|Guyana'))
 
+#Fiz isso porque queria deixar o "C maiusculo na legenda, mas nao consegui alterar apenas la¡
+#Se conseguirem modificar la¡, podem excluir essa parte
+colnames(child_mortality)[1] <- "Country"
+colnames(health_spending)[1] <- "Country"
+colnames(vacc_rate)[1] <- "Country"
+colnames(medical_doctors)[1] <- "Country"
+colnames(life_expectancy)[1] <- "Country"
+
 #juntando os bancos de dados num arquivo só
 db_joined <- lapply(1:5, function(x){vetores <- list(cm, hs, lf, md, vr); 
 xtype <- c("cm", "hs", "lf", "md", "vr"); 
@@ -28,9 +36,122 @@ vetores[[x]] %>% mutate(type = xtype[x])}) %>%
     bind_rows() %>%  select(country, type, everything()) %>%  
     pivot_longer(cols = -c("country", "type"), names_to = "ano", values_to = "valores")
 
-#geração dos gráficos
-ggplot(db_joined, aes(x=ano, y=valores)) + facet_wrap(~country, scale = "free_y", ncol = 2) + 
+###Gerando os gráficos
+##Opção 1: sobrepor todos os dados no mesmo gráfico por países
+db_joined_plot <-
+    ggplot(db_joined, aes(x=ano, y=valores)) + 
+    facet_wrap(~Country, scale = "free_y", ncol = 2) + 
     geom_point(aes(colour = factor(type))) +
     ylab("") + xlab("Year") + 
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size = 7))
+
+##Opçao 2: fazer um gr?fico para cada dado por país
+#Child mortality
+cm_plot <-
+    db_joined %>% filter(type == "cm") %>% 
+    ggplot(aes(x=as.integer(ano), y= valores, col= Country), data = .) + 
+    geom_smooth() +
+    labs(title = "Child Mortality", 
+         x = "", 
+         y = "Death per 1,000 live births",
+         subtitle = "Death of children under five years of age per 1,000 live births") +
+    theme(plot.title = element_text(vjust = 0.5, hjust = 0.5, face = "bold", size = 15),
+          axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0)),
+          axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)),
+          axis.text.x = element_text(angle = 90, vjust = 0.5),
+          legend.title.align = 0.5,
+          plot.subtitle = element_text(hjust=0.5, size = 9))
+
+#Health spending
+hs_plot <-
+    db_joined %>% filter(type == "hs") %>% 
+    ggplot(aes(x=as.integer(ano), y= valores, col= Country), data = .) + 
+    geom_smooth() +
+    labs(title = "Total Health Spending",
+         x = "",
+         y = "(% of GDP)",
+         subtitle = "Sum of public and privite health expenditure as a percentage of GDP",
+         caption = "GDP: Gross domestic product") +
+    theme(plot.title = element_text(vjust = 0.5, hjust = 0.5, face = "bold", size = 15),
+          axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0)),
+          axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)),
+          axis.text.x = element_text(angle = 90, vjust = 0.5),
+          legend.title.align = 0.5,
+          plot.subtitle = element_text(hjust=0.5, size = 9))
+
+#Life expectancy
+lf_plot <-
+    db_joined %>% filter(type == "lf") %>% 
+    ggplot(aes(x=as.integer(ano), y= valores, col= Country), data = .) + 
+    geom_smooth() +
+    labs(title = "Life Expectancy",
+         x = "",
+         y = "Years",
+         subtitle = "Years that a newborn child would live if current mortality patterns were to stay the same") +
+    theme(plot.title = element_text(vjust = 0.5, hjust = 0.5, face = "bold", size = 15),
+          axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0)),
+          axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)),
+          axis.text.x = element_text(angle = 90, vjust = 0.5),
+          legend.title.align = 0.5,
+          plot.subtitle = element_text(hjust=0.5, size = 9))
+
+#Medical doctors
+md_plot <-
+    db_joined %>% filter(type == "md") %>% 
+    ggplot(aes(x=as.integer(ano), y= valores, col= Country), data = .) + 
+    geom_smooth() +
+    labs(title = "Medical Doctors",
+         x = "",
+         y = "Medical doctors per 1000 people",
+         subtitle = "Physicians included generalist and specialist medical doctors practitioners") +
+    theme(plot.title = element_text(vjust = 0.5, hjust = 0.5, face = "bold", size = 15),
+          axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0)),
+          axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)),
+          axis.text.x = element_text(angle = 90, vjust = 0.5),
+          legend.title.align = 0.5,
+          plot.subtitle = element_text(hjust=0.5, size = 9))
+
+#Vaccination rate
+vr_plot <-
+    db_joined %>% filter(type == "vr") %>% 
+    ggplot(aes(x=as.integer(ano), y= valores, col= Country), data = .) + 
+    geom_smooth() +
+    labs(title = "Vaccination Rate",
+         x = "",
+         y = "% of vaccinated children",
+         subtitle = "Share of one-years-olds who are vaccinated against at least one disease") +
+    theme(plot.title = element_text(vjust = 0.5, hjust = 0.5, face = "bold", size = 15),
+          axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0)),
+          axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)),
+          axis.text.x = element_text(angle = 90, vjust = 0.5),
+          legend.title.align = 0.5,
+          plot.subtitle = element_text(hjust=0.5, size = 9))
+
+#Juntando os gráficos gerados na Opçao 2
+#Carregando as bibliotecas
+install.packages("lemon", "cowplow")
+library(lemon, cowplot)
+
+#Extraindo a legenda de um dos gráficos
+legend <- g_legend(cm_plot + theme(legend.position='left'))
+
+#Juntando gráficos
+all_graphics <- 
+    plot_grid(cm_plot + 
+                  theme(legend.position='hidden'), 
+              lf_plot + 
+                  theme(legend.position='hidden'),
+              md_plot + 
+                  theme(legend.position='hidden'), 
+              hs_plot + 
+                  theme(legend.position='hidden'), 
+              vr_plot + 
+                  theme(legend.position='hidden'),
+              labels = c("a", "b", "c", "d", "e"),
+              label_fontface = "italic",
+              ncol =2,
+              legend)
+
+
+ggsave("all_graphics1.pdf", width = 28, height = 28, units = "cm")
 

@@ -1,3 +1,4 @@
+library(readr)
 child_mortality <- read_csv("child_mortality_0_5_year_olds_dying_per_1000_born.csv")
 health_spending <- read_csv("total_health_spending_percent_of_gdp.csv")
 vacc_rate <- read_csv("vacc_rate.csv")
@@ -99,4 +100,13 @@ rownames(uruguai) <- varx
 colnames(venezuela) <- vary
 rownames(venezuela) <- varx
 
+uruguai_df <- as.data.frame(uruguai)
+brasil_df <- as.data.frame(brasil)
+library(dplyr)
+mutate(uruguai_df, country = "uruguai")
+mutate(brasil_df, country = "brasil")
 
+
+
+
+       
