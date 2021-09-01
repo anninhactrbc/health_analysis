@@ -17,17 +17,20 @@ colnames(vacc_rate)[1] <- "Country"
 colnames(medical_doctors)[1] <- "Country"
 colnames(life_expectancy)[1] <- "Country"
 
+#criando um vetor contendo o nome dos paises da América Latina
+paises_al <- c("Brazil|Argentina|Bolivia|Colombia|Peru|Uruguay|Paraguay|Venezuela|Suriname|Ecuador|Guyana")
+
 #filtrando base de dados por países da america latina e por tempo
 cm <- child_mortality[,c("Country", '1959':'2009')]
-cm <- cm %>% filter(stringr::str_detect(Country, 'Brazil|Argentina|Bolivia|Colombia|Peru|Uruguay|Paraguay|Venezuela|Suriname|Ecuador|Guyana'))
+cm <- cm %>% filter(stringr::str_detect(Country, paises_al))
 hs <- health_spending[,c("Country", '1999':'2009')]
-hs <- hs %>% filter(stringr::str_detect(Country, 'Brazil|Argentina|Bolivia|Colombia|Peru|Uruguay|Paraguay|Venezuela|Suriname|Ecuador|Guyana'))
+hs <- hs %>% filter(stringr::str_detect(Country, paises_al))
 md <- medical_doctors[,c("Country",'1959':'2009')]
-md <- md %>% filter(stringr::str_detect(Country, 'Brazil|Argentina|Bolivia|Colombia|Peru|Uruguay|Paraguay|Venezuela|Suriname|Ecuador|Guyana'))
+md <- md %>% filter(stringr::str_detect(Country, paises_al))
 vr <- vacc_rate[,c("Country",'1979':'2009')]
-vr <- vr %>% filter(stringr::str_detect(Country, 'Brazil|Argentina|Bolivia|Colombia|Peru|Uruguay|Paraguay|Venezuela|Suriname|Ecuador|Guyana'))
+vr <- vr %>% filter(str_detect(Country, paises_al))
 lf <- life_expectancy[,c("Country", '1959':'2009')]
-lf <- lf %>% filter(stringr::str_detect(Country, 'Brazil|Argentina|Bolivia|Colombia|Peru|Uruguay|Paraguay|Venezuela|Suriname|Ecuador|Guyana'))
+lf <- lf %>% filter(str_detect(Country, paises_al))
 
 #juntando os bancos de dados num arquivo só
 db_joined <- lapply(1:5, function(x){vetores <- list(cm, hs, lf, md, vr); 
