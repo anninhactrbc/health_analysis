@@ -9,18 +9,6 @@ vacc_rate <- read_csv("vacc_rate.csv")
 medical_doctors <- read_csv("medical_doctors_per_1000_people.csv")
 life_expectancy <- read_csv("life_expectancy_years.csv")
 
-#filtrando base de dados por países da america latina e por tempo
-cm <- child_mortality[,c("country", '1959':'2009')]
-cm <- cm %>% filter(stringr::str_detect(country, 'Brazil|Argentina|Bolivia|Colombia|Peru|Uruguay|Paraguay|Venezuela|Suriname|Ecuador|Guyana'))
-hs <- health_spending[,c("country", '1999':'2009')]
-hs <- hs %>% filter(stringr::str_detect(country, 'Brazil|Argentina|Bolivia|Colombia|Peru|Uruguay|Paraguay|Venezuela|Suriname|Ecuador|Guyana'))
-md <- medical_doctors[,c("country",'1959':'2009')]
-md <- md %>% filter(stringr::str_detect(country, 'Brazil|Argentina|Bolivia|Colombia|Peru|Uruguay|Paraguay|Venezuela|Suriname|Ecuador|Guyana'))
-vr <- vacc_rate[,c("country",'1979':'2009')]
-vr <- vr %>% filter(stringr::str_detect(country, 'Brazil|Argentina|Bolivia|Colombia|Peru|Uruguay|Paraguay|Venezuela|Suriname|Ecuador|Guyana'))
-lf <- life_expectancy[,c("country", '1959':'2009')]
-lf <- lf %>% filter(stringr::str_detect(country, 'Brazil|Argentina|Bolivia|Colombia|Peru|Uruguay|Paraguay|Venezuela|Suriname|Ecuador|Guyana'))
-
 #Fiz isso porque queria deixar o "C maiusculo na legenda, mas nao consegui alterar apenas la¡
 #Se conseguirem modificar la¡, podem excluir essa parte
 colnames(child_mortality)[1] <- "Country"
@@ -29,12 +17,24 @@ colnames(vacc_rate)[1] <- "Country"
 colnames(medical_doctors)[1] <- "Country"
 colnames(life_expectancy)[1] <- "Country"
 
+#filtrando base de dados por países da america latina e por tempo
+cm <- child_mortality[,c("Country", '1959':'2009')]
+cm <- cm %>% filter(stringr::str_detect(Country, 'Brazil|Argentina|Bolivia|Colombia|Peru|Uruguay|Paraguay|Venezuela|Suriname|Ecuador|Guyana'))
+hs <- health_spending[,c("Country", '1999':'2009')]
+hs <- hs %>% filter(stringr::str_detect(Country, 'Brazil|Argentina|Bolivia|Colombia|Peru|Uruguay|Paraguay|Venezuela|Suriname|Ecuador|Guyana'))
+md <- medical_doctors[,c("Country",'1959':'2009')]
+md <- md %>% filter(stringr::str_detect(Country, 'Brazil|Argentina|Bolivia|Colombia|Peru|Uruguay|Paraguay|Venezuela|Suriname|Ecuador|Guyana'))
+vr <- vacc_rate[,c("Country",'1979':'2009')]
+vr <- vr %>% filter(stringr::str_detect(Country, 'Brazil|Argentina|Bolivia|Colombia|Peru|Uruguay|Paraguay|Venezuela|Suriname|Ecuador|Guyana'))
+lf <- life_expectancy[,c("Country", '1959':'2009')]
+lf <- lf %>% filter(stringr::str_detect(Country, 'Brazil|Argentina|Bolivia|Colombia|Peru|Uruguay|Paraguay|Venezuela|Suriname|Ecuador|Guyana'))
+
 #juntando os bancos de dados num arquivo só
 db_joined <- lapply(1:5, function(x){vetores <- list(cm, hs, lf, md, vr); 
 xtype <- c("cm", "hs", "lf", "md", "vr"); 
 vetores[[x]] %>% mutate(type = xtype[x])}) %>% 
-    bind_rows() %>%  select(country, type, everything()) %>%  
-    pivot_longer(cols = -c("country", "type"), names_to = "ano", values_to = "valores")
+    bind_rows() %>%  select(Country, type, everything()) %>%  
+    pivot_longer(cols = -c("Country", "type"), names_to = "ano", values_to = "valores")
 
 ###Gerando os gráficos
 ##Opção 1: sobrepor todos os dados no mesmo gráfico por países
@@ -61,7 +61,7 @@ cm_plot <-
           axis.text.x = element_text(angle = 90, vjust = 0.5),
           legend.title.align = 0.5,
           plot.subtitle = element_text(hjust=0.5, size = 9))
-
+cm_plot
 #Health spending
 hs_plot <-
     db_joined %>% filter(type == "hs") %>% 
@@ -130,7 +130,8 @@ vr_plot <-
 #Juntando os gráficos gerados na Opçao 2
 #Carregando as bibliotecas
 install.packages("lemon", "cowplow")
-library(lemon, cowplot)
+library(lemon)
+library(cowplot)
 
 #Extraindo a legenda de um dos gráficos
 legend <- g_legend(cm_plot + theme(legend.position='left'))
