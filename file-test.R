@@ -69,7 +69,7 @@ cm_plot <-
           axis.text.x = element_text(angle = 90, vjust = 0.5),
           legend.title.align = 0.5,
           plot.subtitle = element_text(hjust=0.5, size = 9))
-cm_plot
+
 #Health spending
 hs_plot <-
     db_joined %>% filter(type == "hs") %>% 
