@@ -1,7 +1,7 @@
 ---
 title: "Relatório Disciplina de R - Análises de Dados relacionados à Saúde"
 author: "Ana Carolina, Ana Cecília, Karol, Laila, Nathan e Thaís"
-date: "01/09/2021"
+date: "08/09/2021"
 output: 
     html_document:
         highlight: textmate
@@ -16,11 +16,11 @@ output:
 
 # Contextualização
   
-DESCREVER O BANCO DE DADOS  
-
+Este relatório contém uma análise descritiva e exploratória de dados relacionados à saúde de países da América do Sul.
+Foram extraídas informações de mortalidade infantil (1959 a 2009), expectativa de vida (1959 a 2009), gastos com saúde (1999 a 2009), proporção de médicos por habitante (1959 a 2009) e vacinação de crianças da base de dados (1979 a 2009) [Gapminder](https://www.gapminder.org/data/).  
+Os países selecionados foram: Brasil, Argentina, Bolívia, Colômbia, Peru, Uruguai, Paraguai, Venezuela, Suriname, Equador e Guiana.
   
 # Metodologia
-
 ## Carregando as bibliotecas utilizadas
 ```{r pacotes, warning = FALSE, message = FALSE}
 library(readr)
@@ -51,18 +51,28 @@ colnames(life_expectancy)[1] <- "Country"
 ```
   
   
+## Criando um vetor contendo o nome dos países da América Latina selecionados
+```{r}
+paises_al <- c("Brazil|Argentina|Bolivia|Colombia|Peru|Uruguay|Paraguay|Venezuela|Suriname|Ecuador|Guyana") 
+```
+  
 ## Filtrando o banco de dados por países da América Latina e por ano
 ```{r filtrando o banco de dados}
-cm <- child_mortality[,c("Country", '1959':'2009')]
-cm <- cm %>% filter(stringr::str_detect(Country, 'Brazil|Argentina|Bolivia|Colombia|Peru|Uruguay|Paraguay|Venezuela|Suriname|Ecuador|Guyana'))
-hs <- health_spending[,c("Country", '1999':'2009')]
-hs <- hs %>% filter(stringr::str_detect(Country, 'Brazil|Argentina|Bolivia|Colombia|Peru|Uruguay|Paraguay|Venezuela|Suriname|Ecuador|Guyana'))
-md <- medical_doctors[,c("Country",'1959':'2009')]
-md <- md %>% filter(stringr::str_detect(Country, 'Brazil|Argentina|Bolivia|Colombia|Peru|Uruguay|Paraguay|Venezuela|Suriname|Ecuador|Guyana'))
-vr <- vacc_rate[,c("Country",'1979':'2009')]
-vr <- vr %>% filter(stringr::str_detect(Country, 'Brazil|Argentina|Bolivia|Colombia|Peru|Uruguay|Paraguay|Venezuela|Suriname|Ecuador|Guyana'))
-lf <- life_expectancy[,c("Country", '1959':'2009')]
-lf <- lf %>% filter(stringr::str_detect(Country, 'Brazil|Argentina|Bolivia|Colombia|Peru|Uruguay|Paraguay|Venezuela|Suriname|Ecuador|Guyana'))
+cm <- child_mortality %>% 
+    select(c("Country", '1959':'2009')) %>% 
+    filter(str_detect(Country, paises_al))
+hs <- health_spending%>% 
+    select(c("Country", '1999':'2009')) %>%
+    filter(str_detect(Country, paises_al))
+md <- medical_doctors%>% 
+    select(c("Country", '1959':'2009')) %>%
+    filter(str_detect(Country, paises_al))
+vr <- vacc_rate%>% 
+    select(c("Country", '1979':'2009')) %>% 
+    filter(str_detect(Country, paises_al))
+lf <- life_expectancy %>% 
+    select(c("Country", '1959':'2009')) %>%
+    filter(str_detect(Country, paises_al))
 ```
   
   
@@ -83,6 +93,10 @@ paged_table(db_joined)
   
   
 ## Geração dos gráficos por país
+  
+  O pacote `ggplot2` foi utilizado para gerar os gráficos neste relatório.
+  A função `geom_smooth` foi escolhida para ver a tendência dos gráficos, uma vez que foi observada falta de informações (`NA`) em muitos casos.
+  
 ### Child Mortality
 ```{r geração dos gráficos 1}
 cm_plot <-
@@ -202,8 +216,13 @@ plot_grid(cm_plot +
 ```  
   
   
+## Salvando em .pdf
+```{r salvando em .pdf, eval = FALSE}
+ggsave("all_graphics1.pdf", width = 28, height = 28, units = "cm")
+```
+  
 # Resultados
-DESCREVER OS RESULTADOS OBTIDOS
+Foi observada uma tendência de aumento da expectativa de vida e da vacinação de crianças, bem como diminuição na mortalidade infantil em todos os países. Os gastos com saúde e a proporção de médicos por habitante foi bastante variável, provavelmente por conta da grande quantidade de *missing values*.
   
   
 ```{r grafico imagem, echo = FALSE, warning = FALSE, message = FALSE}
@@ -221,4 +240,5 @@ plot_grid(cm_plot +
               label_fontface = "italic",
               ncol =2,
               legend)
-```  
+```
+

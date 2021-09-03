@@ -21,16 +21,21 @@ colnames(life_expectancy)[1] <- "Country"
 paises_al <- c("Brazil|Argentina|Bolivia|Colombia|Peru|Uruguay|Paraguay|Venezuela|Suriname|Ecuador|Guyana")
 
 #filtrando base de dados por países da america latina e por tempo
-cm <- child_mortality[,c("Country", '1959':'2009')]
-cm <- cm %>% filter(stringr::str_detect(Country, paises_al))
-hs <- health_spending[,c("Country", '1999':'2009')]
-hs <- hs %>% filter(stringr::str_detect(Country, paises_al))
-md <- medical_doctors[,c("Country",'1959':'2009')]
-md <- md %>% filter(stringr::str_detect(Country, paises_al))
-vr <- vacc_rate[,c("Country",'1979':'2009')]
-vr <- vr %>% filter(str_detect(Country, paises_al))
-lf <- life_expectancy[,c("Country", '1959':'2009')]
-lf <- lf %>% filter(str_detect(Country, paises_al))
+cm <- child_mortality %>% 
+    select(c("Country", '1959':'2009')) %>% 
+    filter(str_detect(Country, paises_al))
+hs <- health_spending%>% 
+    select(c("Country", '1999':'2009')) %>%
+    filter(str_detect(Country, paises_al))
+md <- medical_doctors%>% 
+    select(c("Country", '1959':'2009')) %>%
+    filter(str_detect(Country, paises_al))
+vr <- vacc_rate%>% 
+    select(c("Country", '1979':'2009')) %>% 
+    filter(str_detect(Country, paises_al))
+lf <- life_expectancy %>% 
+    select(c("Country", '1959':'2009')) %>%
+    filter(str_detect(Country, paises_al))
 
 #juntando os bancos de dados num arquivo só
 db_joined <- lapply(1:5, function(x){vetores <- list(cm, hs, lf, md, vr); 
@@ -132,7 +137,6 @@ vr_plot <-
 
 #Juntando os gráficos gerados na Opçao 2
 #Carregando as bibliotecas
-install.packages("lemon", "cowplow")
 library(lemon)
 library(cowplot)
 
@@ -154,8 +158,7 @@ all_graphics <-
               labels = c("a", "b", "c", "d", "e"),
               label_fontface = "italic",
               ncol =2,
-              legend)
+              legend) 
 
-
+#Salvando o gráfico em .pdf
 ggsave("all_graphics1.pdf", width = 28, height = 28, units = "cm")
-
