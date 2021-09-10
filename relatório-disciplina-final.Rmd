@@ -1,0 +1,247 @@
+---
+title: "Relatório Disciplina de R - Análises de Dados relacionados à Saúde"
+author: "Ana Carolina, Ana Cecília, Karol, Laila, Nathan e Thaís"
+date: "08/09/2021"
+output: 
+    html_document:
+        highlight: textmate
+        theme: flatly
+        number_sections: yes
+        toc: yes
+        toc_float: 
+            collapsed: yes
+            smooth_scroll: no
+---
+
+
+# Contextualização
+  
+Este relatório contém uma análise descritiva e exploratória de dados relacionados à saúde de alguns países da América do Sul.
+Foram extraídas informações de mortalidade infantil (1959 a 2009), expectativa de vida (1959 a 2009), gastos com saúde (1999 a 2009), proporção de médicos por habitante (1959 a 2009) e vacinação de crianças (1979 a 2009) da base de dados [Gapminder](https://www.gapminder.org/data/).  
+Os países selecionados para análise foram: Brasil, Argentina, Bolívia, Colômbia, Peru, Uruguai, Paraguai, Venezuela, Suriname, Equador e Guiana.
+  
+# Metodologia e Resultados
+
+## Baixando os bancos de dados do Gapminder
+[Child Mortality](https://gapm.io/du5mr_gm_v11)  
+[Life Expectancy](https://gapm.io/dlex_gm_v11)  
+[Vaccination rate](http://gapm.io/dvacc_for_1yr)  
+[Total Health Spendind (% of GDP)](https://www.who.int/data/gho)  
+[Medical Doctors per 1000 people](https://data.worldbank.org/indicator/SH.MED.PHYS.ZS)
+
+
+## Carregando as bibliotecas utilizadas
+```{r pacotes, warning = FALSE, message = FALSE}
+library(readr)
+library(tidyverse)
+library(lemon)
+library(cowplot)
+library(rmarkdown)
+```
+  
+  
+## Carregando os bancos de dados
+```{r carregamento do banco de dados, warning = FALSE, message = FALSE}
+child_mortality <- read_csv("child_mortality_0_5_year_olds_dying_per_1000_born.csv")
+health_spending <- read_csv("total_health_spending_percent_of_gdp.csv")
+vacc_rate <- read_csv("vacc_rate.csv")
+medical_doctors <- read_csv("medical_doctors_per_1000_people.csv")
+life_expectancy <- read_csv("life_expectancy_years.csv")
+```  
+  
+  
+## Colocando o nome da primeira coluna como 'Country'
+````{r modificação da primeira coluna dos arquivos}
+colnames(child_mortality)[1] <- "Country"
+colnames(health_spending)[1] <- "Country"
+colnames(vacc_rate)[1] <- "Country"
+colnames(medical_doctors)[1] <- "Country"
+colnames(life_expectancy)[1] <- "Country"
+```
+  
+  
+## Criando um vetor contendo o nome dos países da América Latina selecionados
+```{r}
+paises_al <- c("Brazil|Argentina|Bolivia|Colombia|Peru|Uruguay|Paraguay|Venezuela|Suriname|Ecuador|Guyana") 
+```
+  
+## Filtrando o banco de dados por países da América Latina e por ano
+```{r filtrando o banco de dados}
+cm <- child_mortality %>% 
+    select(c("Country", '1959':'2009')) %>% 
+    filter(str_detect(Country, paises_al))
+hs <- health_spending%>% 
+    select(c("Country", '1999':'2009')) %>%
+    filter(str_detect(Country, paises_al))
+md <- medical_doctors%>% 
+    select(c("Country", '1959':'2009')) %>%
+    filter(str_detect(Country, paises_al))
+vr <- vacc_rate%>% 
+    select(c("Country", '1979':'2009')) %>% 
+    filter(str_detect(Country, paises_al))
+lf <- life_expectancy %>% 
+    select(c("Country", '1959':'2009')) %>%
+    filter(str_detect(Country, paises_al))
+```
+  
+  
+## Juntando os bancos de dados em um só arquivo
+```{r juntando os bancos de dados}
+db_joined <- lapply(1:5, function(x){vetores <- list(cm, hs, lf, md, vr); 
+xtype <- c("cm", "hs", "lf", "md", "vr"); 
+vetores[[x]] %>% mutate(type = xtype[x])}) %>% 
+    bind_rows() %>%  select(Country, type, everything()) %>%  
+    pivot_longer(cols = -c("Country", "type"), names_to = "ano", values_to = "valores")
+```
+  
+  
+## Visualização do banco de dados formatado
+```{r}
+paged_table(db_joined)
+```
+  
+  
+## Geração dos gráficos por dataset evidenciando a evolução dos países
+  
+  O pacote `ggplot2` foi utilizado para gerar os gráficos neste relatório.
+  A função `geom_smooth` foi escolhida para ver a tendência dos gráficos, uma vez que foi observada falta de informações (`NA`) em muitos casos.
+  
+### Child Mortality
+```{r geração dos gráficos 1, warning = FALSE, message = FALSE}
+cm_plot <-
+    db_joined %>% filter(type == "cm") %>% 
+    ggplot(aes(x=as.integer(ano), y= valores, col= Country), data = .) + 
+    geom_smooth() +
+    labs(title = "Child Mortality", 
+         x = "", 
+         y = "Death per 1,000 live births",
+         subtitle = "Death of children under five years of age per 1,000 live births") +
+    theme(plot.title = element_text(vjust = 0.5, hjust = 0.5, face = "bold", size = 15),
+          axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0)),
+          axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)),
+          axis.text.x = element_text(angle = 90, vjust = 0.5),
+          legend.title.align = 0.5,
+          plot.subtitle = element_text(hjust=0.5, size = 9))
+cm_plot
+```
+    
+É possível observar que ao longo do tempo, todos os países apresentaram uma queda na mortalidade infantil, principalmente os países Bolívia e Peru.  
+  
+### Health spending
+```{r geração dos gráficos 2, warning = FALSE, message = FALSE}
+hs_plot <-
+    db_joined %>% filter(type == "hs") %>% 
+    ggplot(aes(x=as.integer(ano), y= valores, col= Country), data = .) + 
+    geom_smooth() +
+    labs(title = "Total Health Spending",
+         x = "",
+         y = "(% of GDP)",
+         subtitle = "Sum of public and privite health expenditure as a percentage of GDP",
+         caption = "GDP: Gross domestic product") +
+    theme(plot.title = element_text(vjust = 0.5, hjust = 0.5, face = "bold", size = 15),
+          axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0)),
+          axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)),
+          axis.text.x = element_text(angle = 90, vjust = 0.5),
+          legend.title.align = 0.5,
+          plot.subtitle = element_text(hjust=0.5, size = 9))
+hs_plot
+```
+  
+  Com relação aos gastos totais em saúde, é possível observar que para muitos países não houve muita diferença ao longo dos anos, ele tendeu a ser relativamente estável. Um caso interessante de ser avaliado é o do Equador, que ao longo do tempo passou de 4 para 8.  
+  
+### Life expectancy
+```{r geração dos gráficos 3, warning = FALSE, message = FALSE}
+lf_plot <-
+    db_joined %>% filter(type == "lf") %>% 
+    ggplot(aes(x=as.integer(ano), y= valores, col= Country), data = .) + 
+    geom_smooth() +
+    labs(title = "Life Expectancy",
+         x = "",
+         y = "Years",
+         subtitle = "Years that a newborn child would live if current mortality patterns were to stay the same") +
+    theme(plot.title = element_text(vjust = 0.5, hjust = 0.5, face = "bold", size = 15),
+          axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0)),
+          axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)),
+          axis.text.x = element_text(angle = 90, vjust = 0.5),
+          legend.title.align = 0.5,
+          plot.subtitle = element_text(hjust=0.5, size = 9))
+lf_plot
+```
+  
+  Com relação à expectativa de vida, observa-se que todos os países apresentaram uma tendência de alta, com destaque para Peru e Bolívia.  
+  
+### Medical doctors
+```{r geração dos gráficos 4, warning = FALSE, message = FALSE}
+md_plot <-
+    db_joined %>% filter(type == "md") %>% 
+    ggplot(aes(x=as.integer(ano), y= valores, col= Country), data = .) + 
+    geom_smooth() +
+    labs(title = "Medical Doctors",
+         x = "",
+         y = "Medical doctors per 1000 people",
+         subtitle = "Physicians included generalist and specialist medical doctors practitioners") +
+    theme(plot.title = element_text(vjust = 0.5, hjust = 0.5, face = "bold", size = 15),
+          axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0)),
+          axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)),
+          axis.text.x = element_text(angle = 90, vjust = 0.5),
+          legend.title.align = 0.5,
+          plot.subtitle = element_text(hjust=0.5, size = 9))
+md_plot
+```
+    
+  Já com relação ao número de médicos por 1000 pessoas, os resultados foram um pouco mais misturados. É possível observar que alguns, ao longo do tempo, mantiveram estáveis os números enquanto outros houve aumento do número de médicos. Os países que apresentaram um maior aumento foram: Uruguai, Argentina e Venezuela, embora só tivesse dados disponíveis desse último até o ano de 2000.  
+  
+### Vaccination rate
+```{r geração dos gráficos 5, warning = FALSE, message = FALSE}
+vr_plot <-
+    db_joined %>% filter(type == "vr") %>% 
+    ggplot(aes(x=as.integer(ano), y= valores, col= Country), data = .) + 
+    geom_smooth() +
+    labs(title = "Vaccination Rate",
+         x = "",
+         y = "% of vaccinated children",
+         subtitle = "Share of one-years-olds who are vaccinated against at least one disease") +
+    theme(plot.title = element_text(vjust = 0.5, hjust = 0.5, face = "bold", size = 15),
+          axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0)),
+          axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)),
+          axis.text.x = element_text(angle = 90, vjust = 0.5),
+          legend.title.align = 0.5,
+          plot.subtitle = element_text(hjust=0.5, size = 9))
+vr_plot
+```
+  
+Nesse gráfico que mostra a % de vacinação em crianças vemos que assim como outros indicadores, em todos os países há um aumento do número ao longo dos anos. Importante ressaltar a evolução da Bolívia que em 1979 tinha apenas 30% das suas crianças vacinadas e no ano de 2010 estava próxima de 90%.  
+  
+## Extraindo a legenda de um dos gráficos para usar no gráfico compilado
+```{r extraindo legenda, warning = FALSE, message = FALSE}
+legend <- g_legend(cm_plot + theme(legend.position='left'))
+```  
+  
+  
+## Gerando o gráfico com todos os dados trabalhados
+```{r grafico, warning = FALSE, message = FALSE}
+plot_grid(cm_plot + 
+                  theme(legend.position='hidden'), 
+              lf_plot + 
+                  theme(legend.position='hidden'),
+              md_plot + 
+                  theme(legend.position='hidden'), 
+              hs_plot + 
+                  theme(legend.position='hidden'), 
+              vr_plot + 
+                  theme(legend.position='hidden'),
+              labels = c("a", "b", "c", "d", "e"),
+              label_fontface = "italic",
+              ncol =2,
+              legend)
+```  
+  
+  
+## Salvando em .pdf
+```{r salvando em .pdf, eval = FALSE}
+ggsave("all_graphics1.pdf", width = 28, height = 28, units = "cm")
+```
+  
+# Conclusão
+Foi observada uma tendência de aumento da expectativa de vida e da vacinação de crianças, bem como diminuição na mortalidade infantil em todos os países. Os gastos com saúde e a proporção de médicos por habitante foi bastante variável, provavelmente por conta da grande quantidade de *missing values*.
+  
